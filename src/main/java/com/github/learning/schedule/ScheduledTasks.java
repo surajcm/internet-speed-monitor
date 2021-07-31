@@ -1,5 +1,7 @@
 package com.github.learning.schedule;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,12 +16,25 @@ public class ScheduledTasks {
     private static final Logger log = LogManager.getLogger(ScheduledTasks.class);
     private final LocalDateTime serverStartTime = LocalDateTime.now();
     private final AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger reportTime;
+    private final Counter triggerCount;
+
+    public ScheduledTasks(MeterRegistry meterRegistry) {
+        reportTime = meterRegistry.gauge("internet_report_time_gauge", new AtomicInteger(0));
+        triggerCount = meterRegistry.counter("internet_packet_counter");
+    }
 
     @Scheduled(fixedRate = 5000)
-    public void reportCurrentTime() {
+    public void schedulingTask() {
+        reportTime.set(reportCurrentTime());
+        triggerCount.increment();
+    }
+
+    public int reportCurrentTime() {
         var now = LocalDateTime.now();
         var elapsedTime = Duration.between(serverStartTime, now).getSeconds();
         log.info("# {} : The date is {}, and time is {} [at {} seconds]",
                 counter.incrementAndGet(), now.toLocalDate(), now.toLocalTime(), elapsedTime);
+        return (int) elapsedTime;
     }
 }
