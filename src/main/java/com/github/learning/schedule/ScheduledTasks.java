@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -35,6 +36,14 @@ public class ScheduledTasks {
         var elapsedTime = Duration.between(serverStartTime, now).getSeconds();
         log.info("# {} : The date is {}, and time is {} [at {} seconds]",
                 counter.incrementAndGet(), now.toLocalDate(), now.toLocalTime(), elapsedTime);
-        return (int) elapsedTime;
+        return getRandomNumberInRange(0, 100);
+    }
+
+    private int getRandomNumberInRange(int min, int max) {
+        if (min >= max) {
+            throw new IllegalArgumentException("max must be greater than min");
+        }
+        Random r = new Random();
+        return r.nextInt((max - min) + 1) + min;
     }
 }
