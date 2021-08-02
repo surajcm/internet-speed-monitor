@@ -1,5 +1,9 @@
 package com.github.learning.schedule;
 
+import fr.bmartel.speedtest.SpeedTestReport;
+import fr.bmartel.speedtest.SpeedTestSocket;
+import fr.bmartel.speedtest.inter.ISpeedTestListener;
+import fr.bmartel.speedtest.model.SpeedTestError;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +47,36 @@ public class ScheduledTasks {
         if (min >= max) {
             throw new IllegalArgumentException("max must be greater than min");
         }
-        Random r = new Random();
-        return r.nextInt((max - min) + 1) + min;
+        trySpeedTest();
+        return new Random().nextInt((max - min) + 1) + min;
+    }
+
+    private void trySpeedTest() {
+        SpeedTestSocket speedTestSocket = new SpeedTestSocket();
+
+// add a listener to wait for speedtest completion and progress
+        speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
+
+            @Override
+            public void onCompletion(SpeedTestReport report) {
+                // called when download/upload is complete
+                log.info("[COMPLETED] rate in octet/s : " + report.getTransferRateOctet());
+                log.info("[COMPLETED] rate in bit/s   : " + report.getTransferRateBit());
+            }
+
+            @Override
+            public void onError(SpeedTestError speedTestError, String errorMessage) {
+                // called when a download/upload error occur
+            }
+
+            @Override
+            public void onProgress(float percent, SpeedTestReport report) {
+                // called to notify download/upload progress
+                log.info("[PROGRESS] progress : " + percent + "%");
+                log.info("[PROGRESS] rate in octet/s : " + report.getTransferRateOctet());
+                log.info("[PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
+            }
+        });
+        speedTestSocket.startDownload("http://ipv4.ikoula.testdebit.info/1M.iso");
     }
 }
