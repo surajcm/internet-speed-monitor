@@ -40,13 +40,12 @@ public class ScheduledTasks {
         var elapsedTime = Duration.between(serverStartTime, now).getSeconds();
         log.info("# {} : The date is {}, and time is {} [at {} seconds]",
                 counter.incrementAndGet(), now.toLocalDate(), now.toLocalTime(), elapsedTime);
-        return getRandomNumberInRange(0, 100);
+        return getRandomNumberInRange();
     }
 
-    private int getRandomNumberInRange(int min, int max) {
-        if (min >= max) {
-            throw new IllegalArgumentException("max must be greater than min");
-        }
+    private int getRandomNumberInRange() {
+        int min = 0;
+        int max = 100;
         trySpeedTest();
         return new Random().nextInt((max - min) + 1) + min;
     }
@@ -54,7 +53,7 @@ public class ScheduledTasks {
     private void trySpeedTest() {
         SpeedTestSocket speedTestSocket = new SpeedTestSocket();
 
-// add a listener to wait for speedtest completion and progress
+        // add a listener to wait for speed test completion and progress
         speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
 
             @Override
